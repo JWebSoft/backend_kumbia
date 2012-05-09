@@ -26,10 +26,21 @@ class AdminController extends Controller {
                 View::select(NULL);
                 return FALSE;
             } else {
+                $fechaOld= Session::get('ultimo_acceso');
+                $ahora = date("Y-n-j H:i:s");
+                $tiempo_transcurrido = (strtotime($ahora)-strtotime($fechaOld));
+                if($tiempo_transcurrido>= 300) { //tiempo para evaluar el cierre de sesion por inactividad por defecto 5 min
+                    MyAuth::cerrar_sesion();
+                    return Router::redirect('/');
+                }else {       //sino, actualizo la fecha de la sesión
+                    Session::set('ultimo_acceso', $ahora);
+                }
                 $acl->resetearIntentos();
             }
         } elseif (Input::hasPost('login') && Input::hasPost('clave')) {
             if (MyAuth::autenticar(Input::post('login'), Input::post('clave'))) {
+                $value=date("Y-n-j H:i:s");
+                Session::set('ultimo_acceso', $value);
                 Flash::info('Bienvenido al Sistema <b>' . Auth::get('nombres') . '</b>');
                 return Router::route_to();
             } else {
